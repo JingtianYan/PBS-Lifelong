@@ -13,8 +13,7 @@ public:
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance(){}
-	Instance(const string& map_fname, const string& agent_fname, 
-		int num_of_agents = 0, int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
+	Instance(const string& map_fname, int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
 
 
 	void printAgents() const;
@@ -62,6 +61,8 @@ public:
 
 	int getDefaultNumberOfAgents() const { return num_of_agents; }
 
+	bool loadAgents(std::vector<std::pair<int, int>> start_locs, std::vector<std::pair<int, int>> goal_locs);
+
 private:
 	  // int moves_offset[MOVE_COUNT];
 	  vector<bool> my_map;
@@ -75,8 +76,8 @@ private:
 	  bool loadMap();
 	  void printMap() const;
 	  void saveMap() const;
-
-	  bool loadAgents();
+	  //
+	  // bool loadAgents();
 	  void saveAgents() const;
 
 	  void generateConnectedRandomGrid(int rows, int cols, int obstacles); // initialize new [rows x cols] map with random obstacles

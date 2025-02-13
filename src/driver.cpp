@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include "PBS.h"
+#include <rpc/client.h>
 
 
 /* Main function */
@@ -47,22 +48,29 @@ int main(int argc, char** argv)
 
 	///////////////////////////////////////////////////////////////////////////
 	// load the instance
-	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(),
-		vm["agentNum"].as<int>());
-
+	Instance instance(vm["map"].as<string>());
 	srand(0);
-    PBS pbs(instance, vm["sipp"].as<bool>(), vm["screen"].as<int>());
-    // run
-    double runtime = 0;
-    pbs.solve(vm["cutoffTime"].as<double>());
-    if (vm.count("output"))
-        pbs.saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
-    if (pbs.solution_found && vm.count("outputPaths"))
-        pbs.savePaths(vm["outputPaths"].as<string>());
-    /*size_t pos = vm["output"].as<string>().rfind('.');      // position of the file extension
-    string output_name = vm["output"].as<string>().substr(0, pos);     // get the name without extension
-    cbs.saveCT(output_name); // for debug*/
-    pbs.clearSearchEngines();
+
+	rpc::client client("127.0.0.1", 8080);
+	while (true) {
+		auto commit_cut = client.call("get_location", 2).as<std::vector<std::pair<double, double>>>();
+		auto goals = client.call("get_location", 2).as<std::vector<std::pair<double, double>>>();
+		// TODO@jingtian: update this to get new instance
+
+		PBS pbs(instance, vm["sipp"].as<bool>(), vm["screen"].as<int>());
+		// run
+		double runtime = 0;
+		pbs.solve(vm["cutoffTime"].as<double>());
+		if (vm.count("output"))
+			pbs.saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
+		if (pbs.solution_found && vm.count("outputPaths"))
+			pbs.savePaths(vm["outputPaths"].as<string>());
+		/*size_t pos = vm["output"].as<string>().rfind('.');      // position of the file extension
+		string output_name = vm["output"].as<string>().substr(0, pos);     // get the name without extension
+		cbs.saveCT(output_name); // for debug*/
+		pbs.clearSearchEngines();
+	}
+
 
 	return 0;
 

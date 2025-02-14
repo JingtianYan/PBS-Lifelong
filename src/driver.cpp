@@ -24,7 +24,6 @@ int main(int argc, char** argv)
 
 		// params for the input instance and experiment settings
 		("map,m", po::value<string>()->required(), "input file for map")
-		("agents,a", po::value<string>()->required(), "input file for agents")
 		("output,o", po::value<string>(), "output file for statistics")
 		("outputPaths", po::value<string>(), "output file for paths")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
@@ -53,22 +52,41 @@ int main(int argc, char** argv)
 
 	rpc::client client("127.0.0.1", 8080);
 	while (true) {
-		auto commit_cut = client.call("get_location", 2).as<std::vector<std::pair<double, double>>>();
-		auto goals = client.call("get_location", 2).as<std::vector<std::pair<double, double>>>();
+		auto commit_cut = client.call("get_location", 20).as<std::vector<std::pair<double, double>>>();
+		printf("Agent locations:\n");
+		for (auto loc: commit_cut)
+		{
+			printf("%f %f\n", loc.first, loc.second);
+		}
+		auto goals = client.call("get_goals", 1).as<std::vector<std::vector<std::tuple<int, int, double>>>>();
+		printf("Goals:\n");
+		for (auto goal: goals)
+		{
+			printf("%d %d\n", std::get<0> (goal[0]), std::get<1> (goal[0]));
+		}
+		if (commit_cut.empty() or goals.empty())
+		{
+			printf("Planner not initialized! Retrying\n");
+			sleep(1);
+			continue;
+		}
 		// TODO@jingtian: update this to get new instance
-
+		instance.loadAgents(commit_cut, goals);
 		PBS pbs(instance, vm["sipp"].as<bool>(), vm["screen"].as<int>());
 		// run
 		double runtime = 0;
 		pbs.solve(vm["cutoffTime"].as<double>());
-		if (vm.count("output"))
-			pbs.saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
-		if (pbs.solution_found && vm.count("outputPaths"))
-			pbs.savePaths(vm["outputPaths"].as<string>());
+		// if (vm.count("output"))
+		// 	pbs.saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
+		// if (pbs.solution_found && vm.count("outputPaths"))
+		// 	pbs.savePaths(vm["outputPaths"].as<string>());
 		/*size_t pos = vm["output"].as<string>().rfind('.');      // position of the file extension
 		string output_name = vm["output"].as<string>().substr(0, pos);     // get the name without extension
 		cbs.saveCT(output_name); // for debug*/
+		auto new_mapf_plan = pbs.getPaths();
 		pbs.clearSearchEngines();
+		client.call("add_plan", new_mapf_plan);
+		sleep(3);
 	}
 
 

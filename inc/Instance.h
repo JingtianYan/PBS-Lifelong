@@ -61,7 +61,7 @@ public:
 
 	int getDefaultNumberOfAgents() const { return num_of_agents; }
 
-	bool loadAgents(std::vector<std::pair<int, int>> start_locs, std::vector<std::pair<int, int>> goal_locs);
+	bool loadAgents(std::vector<std::pair<double, double>>& start_locs, std::vector<std::vector<std::tuple<int, int, double>>>& goal_locs);
 
 private:
 	  // int moves_offset[MOVE_COUNT];

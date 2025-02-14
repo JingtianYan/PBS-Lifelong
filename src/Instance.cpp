@@ -52,6 +52,82 @@ bool Instance::validMove(int curr, int next) const
 	return getManhattanDistance(curr, next) < 2;
 }
 
+void Instance::generateConnectedRandomGrid(int rows, int cols, int obstacles)
+{
+	cout << "Generate a " << rows << " x " << cols << " grid with " << obstacles << " obstacles. " << endl;
+	int i, j;
+	num_of_rows = rows + 2;
+	num_of_cols = cols + 2;
+	map_size = num_of_rows * num_of_cols;
+	my_map.resize(map_size, false);
+	// Possible moves [WAIT, NORTH, EAST, SOUTH, WEST]
+	/*moves_offset[Instance::valid_moves_t::WAIT_MOVE] = 0;
+	moves_offset[Instance::valid_moves_t::NORTH] = -num_of_cols;
+	moves_offset[Instance::valid_moves_t::EAST] = 1;
+	moves_offset[Instance::valid_moves_t::SOUTH] = num_of_cols;
+	moves_offset[Instance::valid_moves_t::WEST] = -1;*/
+
+	// add padding
+	i = 0;
+	for (j = 0; j<num_of_cols; j++)
+		my_map[linearizeCoordinate(i, j)] = true;
+	i = num_of_rows - 1;
+	for (j = 0; j<num_of_cols; j++)
+		my_map[linearizeCoordinate(i, j)] = true;
+	j = 0;
+	for (i = 0; i<num_of_rows; i++)
+		my_map[linearizeCoordinate(i, j)] = true;
+	j = num_of_cols - 1;
+	for (i = 0; i<num_of_rows; i++)
+		my_map[linearizeCoordinate(i, j)] = true;
+
+	// add obstacles uniformly at random
+	i = 0;
+	while (i < obstacles)
+	{
+		int loc = rand() % map_size;
+		if (addObstacle(loc))
+		{
+			printMap();
+			i++;
+		}
+	}
+}
+
+bool Instance::addObstacle(int obstacle)
+{
+	if (my_map[obstacle])
+		return false;
+	my_map[obstacle] = true;
+	int obstacle_x = getRowCoordinate(obstacle);
+	int obstacle_y = getColCoordinate(obstacle);
+	int x[4] = { obstacle_x, obstacle_x + 1, obstacle_x, obstacle_x - 1 };
+	int y[4] = { obstacle_y - 1, obstacle_y, obstacle_y + 1, obstacle_y };
+	int start = 0;
+	int goal = 1;
+	while (start < 3 && goal < 4)
+	{
+		if (x[start] < 0 || x[start] >= num_of_rows || y[start] < 0 || y[start] >= num_of_cols
+			|| my_map[linearizeCoordinate(x[start], y[start])])
+			start++;
+		else if (goal <= start)
+			goal = start + 1;
+		else if (x[goal] < 0 || x[goal] >= num_of_rows || y[goal] < 0 || y[goal] >= num_of_cols
+			|| my_map[linearizeCoordinate(x[goal], y[goal])])
+			goal++;
+		else if (isConnected(linearizeCoordinate(x[start], y[start]), linearizeCoordinate(x[goal], y[goal]))) // cannot find a path from start to goal
+		{
+			start = goal;
+			goal++;
+		}
+		else
+		{
+			my_map[obstacle] = false;
+			return false;
+		}
+	}
+	return true;
+}
 
 bool Instance::isConnected(int start, int goal)
 {
@@ -171,7 +247,7 @@ void Instance::saveMap() const
 }
 
 
-bool Instance::loadAgents(std::vector<std::pair<int, int>> start_locs, std::vector<std::pair<int, int>> goal_locs)
+bool Instance::loadAgents(std::vector<std::pair<double, double>>& start_locs, std::vector<std::vector<std::tuple<int, int, double>>>& goal_locs)
 {
 	using namespace std;
 	using namespace boost;
@@ -187,11 +263,11 @@ bool Instance::loadAgents(std::vector<std::pair<int, int>> start_locs, std::vect
 	char_separator<char> sep("\t");
 	for (int i = 0; i < num_of_agents; i++)
 	{
-		int col = start_locs[i].first;
-		int row = start_locs[i].second;
+		int col = static_cast<int>(start_locs[i].first);
+		int row = static_cast<int>(start_locs[i].second);
 		start_locations[i] = linearizeCoordinate(row, col);
-		col = goal_locs[i].first;
-		row = goal_locs[i].second;
+		col = std::get<0> (goal_locs[i][0]);
+		row = std::get<1> (goal_locs[i][0]);
 		goal_locations[i] = linearizeCoordinate(row, col);
 	}
 

@@ -555,6 +555,27 @@ void PBS::savePaths(const string &fileName) const
     output.close();
 }
 
+std::vector<std::vector<std::tuple<int, int, double>>> PBS::getPaths()
+{
+	std::vector<std::vector<std::tuple<int, int, double>>> new_mapf_plan;
+	new_mapf_plan.resize(num_of_agents);
+	printf("Num of agents: %d\n", num_of_agents);
+	for (int i = 0; i < num_of_agents; i++)
+	{
+		int tmp_step = 0;
+		for (const auto & t : *paths[i])
+		{
+			new_mapf_plan[i].emplace_back(search_engines[0]->instance.getColCoordinate(t.location),
+				search_engines[0]->instance.getRowCoordinate(t.location), static_cast<double> (tmp_step));
+			std::cout << "(" << search_engines[0]->instance.getColCoordinate(t.location)
+				   << "," << search_engines[0]->instance.getRowCoordinate(t.location) << ")->";
+			tmp_step++;
+		}
+		std::cout << std::endl;
+	}
+	return new_mapf_plan;
+}
+
 void PBS::printConflicts(const PBSNode &curr)
 {
 	for (const auto& conflict : curr.conflicts)

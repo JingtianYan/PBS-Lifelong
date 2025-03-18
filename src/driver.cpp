@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 		("output,o", po::value<string>(), "output file for statistics")
 		("outputPaths", po::value<string>(), "output file for paths")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-		("cutoffTime,t", po::value<double>()->default_value(7200), "cutoff time (seconds)")
+		("cutoffTime,t", po::value<double>()->default_value(3), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(1), "screen option (0: none; 1: results; 2:all)")
 		("stats", po::value<bool>()->default_value(false), "write to files some detailed statistics")
     ("portNum", po::value<int>()->default_value(8080), "port number for the server")
@@ -47,12 +47,11 @@ int main(int argc, char** argv)
 
 	///////////////////////////////////////////////////////////////////////////
 	// load the instance
-	Instance instance(vm["map"].as<string>());
 	srand(0);
 
 	rpc::client client("127.0.0.1", vm["portNum"].as<int>());
 	while (true) {
-		auto commit_cut = client.call("get_location", 20).as<std::vector<std::pair<double, double>>>();
+		auto commit_cut = client.call("get_location", 10).as<std::vector<std::pair<double, double>>>();
 		printf("Agent locations:\n");
 		for (auto loc: commit_cut)
 		{
@@ -71,6 +70,7 @@ int main(int argc, char** argv)
 			continue;
 		}
 		// TODO@jingtian: update this to get new instance
+		Instance instance(vm["map"].as<string>());
 		instance.loadAgents(commit_cut, goals);
 		PBS pbs(instance, vm["sipp"].as<bool>(), vm["screen"].as<int>());
 		// run
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 		pbs.clearSearchEngines();
 		client.call("add_plan", new_mapf_plan);
     // instance.printMap();
-		sleep(3);
+		sleep(1);
 	}
 
 

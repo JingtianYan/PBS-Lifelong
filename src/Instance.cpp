@@ -10,7 +10,7 @@ Instance::Instance(const string& map_fname, int num_of_rows, int num_of_cols, in
 	map_fname(map_fname)
 {
 	bool succ = loadMap();
-  printMap();
+  // printMap();
 	if (!succ)
 	{
 		if (num_of_rows > 0 && num_of_cols > 0 && num_of_obstacles >= 0 &&
@@ -209,7 +209,7 @@ bool Instance::loadMap()
 
 void Instance::printMap() const
 {
-  std::cout << "num of rows: " << num_of_rows << " num of cols: " << num_of_cols << std::endl;
+  // std::cout << "num of rows: " << num_of_rows << " num of cols: " << num_of_cols << std::endl;
 	for (int i = 0; i< num_of_rows; i++)
 	{
 		for (int j = 0; j < num_of_cols; j++)
